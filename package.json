@@ -1,0 +1,35 @@
+{
+  "name": "@nickcuper/red-contrib-html-pro",
+  "version": "1.0.0",
+  "description": "Advance html parser for NodeRED",
+  "homepage": "https://github.com/nickcuper/node-red-node-html-pro",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nickcuper/node-red-node-html-pro.git"
+  },
+  "keywords": [
+    "node-red",
+    "html",
+    "html-pro",
+    "parser"
+  ],
+  "author": "Dmytro Petrenko <petrenko.dmytro.work@gmail.com>",
+  "maintainers": [
+    "Dmytro Petrenko <petrenko.dmytro.work@gmail.com>"
+  ],
+  "dependencies": {
+    "node-html-parser": "^6.1.12"
+  },
+  "node-red": {
+    "nodes": {
+      "html-pro": "nodes/html-pro/index.js"
+    }
+  },
+  "bugs": {
+    "url": "https://github.com/nickcuper/node-red-node-html-pro/issues"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}

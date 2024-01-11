@@ -1,0 +1,214 @@
+<script type="text/html" data-template-name="html-pro">
+    <style>
+        .adjustable-width {
+            width: calc(100% - 105px);
+        }
+
+        .red-ui-editableList-container {
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        #node-input-selector-container {
+            min-height: 150px;
+            min-width: 450px;
+        }
+
+        .checkbox-input {
+            width: auto !important;
+        }
+    </style>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span>Name</span></label>
+        <input type="text" id="node-input-name" class="adjustable-width">
+    </div>
+    <div class="form-row">
+        <label for="node-input-property"><i class="fa fa-ellipsis-h"></i> <span>Property</span></label>
+        <div class="red-ui-typedInput-container adjustable-width">
+            <button type="button" class="red-ui-typedInput-type-select disabled" tabindex="-1" title="msg.">
+                <span class="red-ui-typedInput-type-label">msg.</span>
+            </button>
+            <input type="text" id="node-input-property" class="red-ui-typedInput-input">
+        </div>
+    </div>
+    <div class="form-row">
+        <label for="node-input-outproperty"><i class="fa fa-sign-out"></i><span>Out Property</span></label>
+        <div class="red-ui-typedInput-container adjustable-width">
+            <button type="button" class="red-ui-typedInput-type-select disabled" tabindex="-1" title="msg.">
+                <span class="red-ui-typedInput-type-label">msg.</span>
+            </button>
+            <input class="red-ui-typedInput-input" id="node-input-outproperty" type="text" autocomplete="off" />
+        </div>
+    </div>
+    <div class="form-row">
+        <label for="node-input-dotrim"><span>Trim values</span></label>
+        <input type="checkbox" id="node-input-dotrim" class="checkbox-input">
+    </div>
+    <div class="form-row node-input-selector-container-row">
+        <ol id="node-input-selector-container"></ol>
+    </div>
+</script>
+
+<template id="selector">
+    <div id="selector-IDX">
+        <div class="form-row">
+            <label for="node-input-return-array-IDX">
+                <i class="fa fa-th-large"></i>
+                <span>Return Array</span>
+            </label>
+            <input type="checkbox" id="node-input-return-array-IDX" class="checkbox-input node-input-selector-return-array">
+        </div>
+        <div class="form-row">
+            <label for="node-input-key-IDX">
+                <i class="fa fa-tag"></i>
+                <span>Key</span>
+            </label>
+            <input type="text" class="node-input-selector-key-value red-ui-typedInput" id="node-input-key-IDX"
+                   autocomplete="off" value="" placeholder="Key">
+        </div>
+        <div class="form-row">
+            <label for="node-input-path-IDX">
+                <i class="fa fa-filter"></i>
+                <span>CSS path</span>
+            </label>
+            <input type="text" class="node-input-selector-path-value red-ui-typedInput" id="node-input-path-IDX"
+                   autocomplete="off" value="" placeholder="h1">
+        </div>
+        <div class="form-row">
+            <label for="node-input-returnValue-IDX">
+                <i class="fa fa-sign-out"></i>
+                <span>Return as</span>
+            </label>
+            <select class="node-input-selector-return-value" id="node-input-returnValue-IDX">
+                <option value="0">Text</option>
+                <option value="1">Html</option>
+                <option value="2">Value</option>
+                <option value="3">Attribute</option>
+            </select>
+        </div>
+        <div class="form-row" id="attribute-IDX" style="display: none;">
+            <label for="node-input-attribute-IDX">
+                <i class="fa fa-tag"></i>
+                <span>Attribute</span>
+            </label>
+            <input type="text" class="node-input-selector-attr-value red-ui-typedInput" id="node-input-attribute-IDX"
+                   autocomplete="off" value="" placeholder="class, id, href...">
+        </div>
+    </div>
+</template>
+
+<script type="text/javascript">
+    const handleAs = {
+        Text: 0,
+        Html: 1,
+        Value: 2,
+        Attribute: 3,
+    };
+
+    RED.nodes.registerType('html-pro', {
+        category: 'parser',
+        color: '#97ebff',
+
+        defaults: {
+            name: { value: '', required: true },
+            property: { value: 'payload', required: true },
+            outproperty: { value: 'payload', required: true },
+            dotrim: { value: true },
+            selectors: {
+                value: [{path: '', key: '', returnValue: handleAs.Text, attribute: '', returnArray: false}],
+                validate: (selectors, opt) => {
+                    return true;
+                }
+            },
+        },
+
+        inputs: 1,
+        outputs: 1,
+        icon: 'html-pro.svg',
+        label: function () {
+            return this.name || 'html-pro';
+        },
+        labelStyle: function () {
+            return this.name ? 'node_label_italic' : '';
+        },
+        oneditsave: function () {
+            const node = this;
+
+            node.selectors = [];
+
+            $('#node-input-selector-container').editableList('items').each(function () {
+                const path = $(this).find('.node-input-selector-path-value').val();
+                const key = $(this).find('.node-input-selector-key-value').val();
+                const attribute = $(this).find('.node-input-selector-attr-value').val() ?? '';
+                const returnValue = $(this).find('.node-input-selector-return-value').val() ?? handleAs.Text;
+                const returnArray = $(this).find('.node-input-selector-return-array').prop('checked');
+
+                node.selectors.push({path, key, returnValue, attribute, returnArray});
+            });
+
+            node.selectors = node.selectors.filter(el => el.path && el.key);
+        },
+        oneditprepare: function () {
+            const selectorContainer = $('#node-input-selector-container');
+
+            selectorContainer.editableList({
+                addItem: function (container, i, item) {
+                    const selector = item;
+                    const template = document.getElementById('selector');
+
+                    template.content.querySelector('.node-input-selector-path-value').setAttribute('value', selector.path ?? '');
+                    template.content.querySelector('.node-input-selector-key-value').setAttribute('value', selector.key ?? '');
+                    template.content.querySelector('.node-input-selector-attr-value').setAttribute('value', selector.attribute ?? '');
+
+                    const hydratedTemplate = template.innerHTML.replaceAll('IDX', i);
+                    container.append(document.createRange().createContextualFragment(hydratedTemplate));
+
+                    container[0].querySelector('.node-input-selector-return-array').checked = selector.returnArray;
+                    container[0]?.querySelectorAll(`#node-input-returnValue-${i} option`)?.forEach(el => {
+                        if (el.value === selector.returnValue) {
+                            el.selected = true;
+                        }
+                    });
+
+                    const attributeInput = document.querySelector(`#attribute-${i}`);
+                    const selectReturnValue = $(container[0].querySelector(`#node-input-returnValue-${i}`));
+                    selectReturnValue.on('change', function () {
+                        const selectedOption = $(this).val();
+
+                        if (selectedOption == handleAs.Attribute) {
+                            $(attributeInput).show('slow');
+                        } else {
+                            $(attributeInput).hide('slow');
+                        }
+                    });
+                    selectReturnValue.change();
+                },
+                removable: true,
+                sortable: true
+            });
+
+            if (!this.selectors) {
+                this.selectors = [{
+                    path: '', key: '', returnValue: handleAs.Text, attribute: '', returnArray: false
+                }];
+            }
+
+            (this.selectors || []).filter((el) => el.key && el.path).forEach((item) => {
+                selectorContainer.editableList('addItem', item);
+            });
+        },
+        oneditresize: function (size) {
+            const rows = $("#dialog-form>div:not(.node-input-selector-container-row)");
+            let height = size.height;
+            for (let i = 0; i < rows.length; i++) {
+                height -= $(rows[i]).outerHeight(true);
+            }
+
+            const editorRow = $("#dialog-form>div.node-input-selector-container-row");
+            height -= (parseInt(editorRow.css("marginTop")) + parseInt(editorRow.css("marginBottom")));
+            height += 16;
+
+            $("#node-input-selector-container").editableList('height', height);
+        }
+    });
+</script>
