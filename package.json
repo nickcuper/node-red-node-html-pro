@@ -1,6 +1,6 @@
 {
   "name": "@nickcuper/node-red-contrib-html-pro",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Advance html parser for NodeRED",
   "homepage": "https://github.com/nickcuper/node-red-node-html-pro",
   "license": "Apache-2.0",
@@ -11,6 +11,7 @@
   "keywords": [
     "node-red",
     "html",
+    "scrapper",
     "html-pro",
     "parser"
   ],
